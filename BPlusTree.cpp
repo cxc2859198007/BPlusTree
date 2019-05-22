@@ -3,32 +3,9 @@
 #include<istream>
 #include<ostream>
 using namespace std;
-ifstream in1;
-ofstream out1, out2;
-void is_exist(BPlusTree& tmpbpt, char tableName[30]) {
-	char filePathName[50];
-	strcpy_s(filePathName, "D:\\");
-	int tableNameLen = strlen(tableName);
-	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree.txt", 14);
-	in1.open(filePathName, ios::in);
+ifstream in;
+ofstream out;
 
-	tmpbpt.Create();
-	if (!in1) {
-		in1.close();
-		return;
-	}
-	else {
-		int tmpkey = 0;
-		long long tmpbytes = 0;
-		while (!in1.eof()) {
-			in1 >> tmpkey >> tmpbytes;
-			tmpbpt.Insert(tmpbpt.root, tmpkey, tmpbytes);
-		}
-		in1.close();
-		return;
-	}
-}
 /*
 void BPlusTree::Print() {
 	
@@ -57,27 +34,27 @@ void BPlusTree::Print() {
 */
 void BPlusTree::Save(char tableName[30]) {
 	char filePathName[50];
-	strcpy_s(filePathName, "D:\\");
 	int tableNameLen = strlen(tableName);
+	strcpy_s(filePathName, "");
 	strncat_s(filePathName, tableName, tableNameLen);
 	strncat_s(filePathName, "_bplustree.txt", 14);
 
-	out2.open(filePathName, ios::out);
+	out.open(filePathName, ios::out);
 	Node* pos = root;
 	while (pos->is_leaf == false) {
 		pos = pos->ch[1];
 	}
 	while (pos != NULL) {
 		for (int i = 1; i <= pos->num; i++) {
-			out2 << pos->key[i] << " " << pos->bytes[i] << endl;
+			out << pos->key[i] << " " << pos->bytes[i] << endl;
 		}
 		pos = pos->next;
 	}
-	out2.close();
+	out.close();
 	return;
 }
 
-Node* BPlusTree::Node_new() {//ÐÂ½¨Ò»¸ö¿Õ½áµã
+Node* BPlusTree::Node_new() {
 	Node* node = new Node;
 	node->is_leaf = true;
 	for (int i = 0; i < M + 5; i++) node->key[i] = 0;
@@ -89,12 +66,12 @@ Node* BPlusTree::Node_new() {//ÐÂ½¨Ò»¸ö¿Õ½áµã
 	return node;
 }
 
-void BPlusTree::Create() {//´´½¨Ò»¿ÃB+Ê÷ Ö»ÓÐÒ»¸ö¿ÕµÄ¸ù
+void BPlusTree::Create() {
 	Node* node = Node_new();
 	root = node;
 }
 
-Node* BPlusTree::Search_leaf(Node* now, int target) {//ÕÒµ½targetÓ¦¸Ã²åÈë/É¾³ý/²éÑ¯µÄÒ¶×Ó½áµã
+Node* BPlusTree::Search_leaf(Node* now, int target) {
 	if (now->is_leaf == true) return now;
 	bool flag = false;
 	for (int i = 1; i <= now->num; i++) {
@@ -108,7 +85,7 @@ Node* BPlusTree::Search_leaf(Node* now, int target) {//ÕÒµ½targetÓ¦¸Ã²åÈë/É¾³ý/²
 		return Search_leaf(now->ch[now->num + 1], target);
 }
 
-long long BPlusTree::Search_bytes(Node* root, int target) {
+long long BPlusTree::Search_bytes(int target) {
 	Node* pos = Search_leaf(root, target);
 	int k = 0;
 	for (int i = 1; i <= pos->num; i++) {
@@ -121,7 +98,7 @@ long long BPlusTree::Search_bytes(Node* root, int target) {
 	return pos->bytes[k];
 }
 
-void BPlusTree::Split(Node* p1) {//p1ÓÐM¸ökey£¬³¬³öM-1µÄÏÞÖÆ£¬·ÖÁÑ
+void BPlusTree::Split(Node* p1) {
 	Node* fa = p1->fath;
 	
 	Node* p2 = Node_new();
@@ -467,4 +444,29 @@ bool BPlusTree::Delete(Node*& root, int target) {
 	}
 
 	return true;
+}
+
+bool is_exist(BPlusTree& tmpbpt, char tableName[30]) {
+	char filePathName[50];
+	int tableNameLen = strlen(tableName);
+	strcpy_s(filePathName, "");
+	strncat_s(filePathName, tableName, tableNameLen);
+	strncat_s(filePathName, "_bplustree.txt", 14);
+	in.open(filePathName, ios::in);
+
+	tmpbpt.Create();
+	if (!in) {
+		in.close();
+		return false;
+	}
+	else {
+		int tmpkey = 0;
+		long long tmpbytes = 0;
+		while (!in.eof()) {
+			in >> tmpkey >> tmpbytes;
+			tmpbpt.Insert(tmpbpt.root, tmpkey, tmpbytes);
+		}
+		in.close();
+		return true;
+	}
 }
