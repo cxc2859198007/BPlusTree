@@ -63,8 +63,6 @@ void Operation::cinTableName(char tablename[30]) {
 
 void Operation::buildNewTable(char tablename[30], int rownum, char rowname[20][30], char booltype[20], int primarykeynum) {
 	cinTableName(tablename);
-	is_exist(bpt, tableName);
-	
 	record_num = 0;
 	rowNum = rownum;
 	for (int i = 0; i < rowNum; i++) {
@@ -77,10 +75,17 @@ void Operation::buildNewTable(char tablename[30], int rownum, char rowname[20][3
 	}
 	primaryKeyNum = primarykeynum;
 	saveInfo();
+	getInfo();
+	is_exist(bpt, tableName);
+}
+
+void Operation::chooseOldTable(char tablename[30]) {
+	cinTableName(tablename);
+	getInfo();
+	is_exist(bpt, tableName);
 }
 
 bool Operation::insertByFile(char FileName[30]) {
-	getInfo();
 	ifstream fin(FileName, ios::in);
 	fin.seekg(0, ios::beg);
 	fstream f;
@@ -88,7 +93,7 @@ bool Operation::insertByFile(char FileName[30]) {
 	if (!f) return false;
 	char tempStr[20][30]; int tempInt[20];
 	while (!fin.eof()) {
-		int tempIntIndex = 0, tempStrIndex = 0, temPrimKey = -1;
+		int tempIntIndex = 0, tempStrIndex = 0, temPrimKey = 0;
 		for (int i = 0; i < rowNum; i++) {
 			if (!bool_type[i]) {
 				fin >> tempInt[tempIntIndex];
@@ -121,19 +126,18 @@ bool Operation::insertByFile(char FileName[30]) {
 		bpt.Insert(bpt.root, temPrimKey, p);
 
 	}
-	upDate();
+	upDateInfo();
 	f.close(); fin.close();
 	return true;
 }
 
-bool Operation::insertByHands(char cinData[40][30]) {
-	getInfo();
+bool Operation::insertByHands(char cinData[20][30]) {
 	fstream f;
 	f.open(binFileName, ios::app | ios::binary);
 	if (!f) return false;
 	int tempInt[20];
 	char tempStr[20][30];
-	int tempIntIndex = 0, tempStrIndex = 0, temPrimKey = -1;
+	int tempIntIndex = 0, tempStrIndex = 0, temPrimKey = 0;
 	for (int i = 0; i < rowNum; i++) {
 		if (!bool_type[i]) {
 			tempInt[tempIntIndex] = char_to_int(cinData[i]);
@@ -165,17 +169,192 @@ bool Operation::insertByHands(char cinData[40][30]) {
 		if (i == rowNum - 1) record_num++;
 	}
 	bpt.Insert(bpt.root, temPrimKey, p);
-	upDate();
+	upDateInfo();
 	f.close();
 	return true;
 }
 
-void Operation::upDate() {
+void Operation::upDateInfo() {
 	buildBinFileName();
 	fstream update;
 	update.open(binFileName, ios::binary | ios::out | ios::in);
 	update.seekp(8, ios::beg);
 	update.write((char*)& record_num, sizeof(int));
+}
+
+void Operation::showRecord(long* adrs, int adr_num) {
+	fstream f;
+	f.open(binFileName, ios::in | ios::binary);
+	for (int k = 0; k < adr_num; k++) {
+		cout << "第" << k << "条:  ";
+		f.seekg(adrs[k], ios::beg);
+		char tempStr[30]; int tempInt;
+		bool flag = 0;
+		f.read((char*)& flag, sizeof(bool));
+		if (flag) {
+			for (int i = 0; i < rowNum; i++) {
+				if (!bool_type[i]) {
+					f.read((char*)& tempInt, sizeof(int));
+					cout << tempInt << " ";
+				}
+				else {
+					f.read((char*)& tempStr, sizeof(tempStr));
+					cout << tempStr << " ";
+				}
+			}
+		}
+		cout << endl;
+	}
+	f.close();
+}
+
+long Operation::getFirstAdr(int row) {
+	long firstAdr = infoSize + sizeof(bool);
+	for (int i = 0; i < row - 1; i++) {
+		if (!bool_type[i]) firstAdr += sizeof(int);
+		else firstAdr += sizeof(char[30]);
+	}
+	return firstAdr;
+}
+
+int Operation::search_adr(int row, char target[30], long*& result_adr) {
+	long firstAdr = getFirstAdr(row);
+	int result_num = 0;
+	fstream f;
+	f.open(binFileName, ios::in | ios::binary);
+	if (bool_type[row - 1] == 0) {
+		int intTarget = char_to_int(target);
+		int tempInt; bool flag = false;
+		if (row == primaryKeyNum) {
+			long the_result = 0;
+			the_result = bpt.Search_bytes(intTarget);
+			if (the_result == -1) return 0;
+			else{
+				result_adr[result_num++] = the_result;
+				f.close();
+				return result_num;
+			}
+		}
+		for (long i = 0; i < record_num; i++) {
+			long p = i * long(recordSize) + firstAdr;
+			f.seekg(i * long(recordSize) + infoSize, ios::beg);
+			f.read((char*)& flag, sizeof(bool));
+			f.seekg(p, ios::beg);
+			f.read((char*)& tempInt, sizeof(int));
+			if (tempInt == intTarget && flag) {
+				result_adr[result_num++] = (i * long(recordSize) + infoSize);
+			}
+		}
+		f.close();
+		return result_num;
+	}
+	else {
+		char temChar[30]; bool flag = false;
+		int result_index = 0;
+		for (long i = 0; i < record_num; i++) {
+			long p = i * long(recordSize) + firstAdr;
+			f.seekg(i * long(recordSize) + infoSize, ios::beg);
+			f.read((char*)& flag, sizeof(bool));
+			f.seekg(p, ios::beg);
+			f.read((char*)& temChar, sizeof(temChar));
+			if (!strcmp(target, temChar) && flag) {
+				result_adr[result_num++] = (i * long(recordSize) + infoSize);
+			}
+		}
+		f.close();
+		return result_num;
+	}
+}
+
+bool Operation::search(int row, char target[30]) {
+	long* result_adr = new long[1000];
+	int result_num = search_adr(row, target, result_adr);//????
+	if (result_num == 0) return false;
+	else {
+		showRecord(result_adr, result_num);
+		return true;
+	}
+}
+
+void Operation::deleteInFile(long* adrs, int adr_num) {
+	fstream update;
+	update.open(binFileName, ios::binary | ios::out | ios::in);
+	for (int i = 0; i < adr_num; i++) {
+		update.seekp(adrs[i], ios::beg);//???类型
+		bool flag = false;
+		update.write((char*)& flag, sizeof(flag));
+		record_num--;
+	}
+	upDateInfo();
+	update.close();
+}
+bool Operation::deletee(int row, char target[30]) {
+	long* result_adr = new long[1000];
+	int result_num = search_adr(row, target, result_adr);//????
+	if (result_num == 0) return false;
+	showRecord(result_adr, result_num);
+	deleteInFile(result_adr, result_num);
+
+	if (row == primaryKeyNum) {
+		int intTarget = char_to_int(target);
+		bpt.Delete(bpt.root, intTarget);
+	}
+	else {
+		fstream f;
+		f.open(binFileName, ios::in | ios::binary);
+		for (int k = 0; k < result_num; k++) {
+			f.seekg(result_adr[k], ios::beg);
+			char tempStr[30]; int tempInt;
+			bool flag = 0;
+			f.read((char*)& flag, sizeof(bool));
+			if (flag) {
+				for (int i = 0; i < rowNum; i++) {
+					if (!bool_type[i]) {
+						f.read((char*)& tempInt, sizeof(int));
+						if (i == primaryKeyNum) {
+							bpt.Delete(bpt.root, tempInt);
+							break;
+						}
+					}
+					else f.read((char*)& tempStr, sizeof(tempStr));
+				}
+			}
+		}
+	}
+	//delete result_adr;
+	return true;
+}
+
+void Operation::upDateRecord(long adr, char reviseData[30], bool type) {
+	char tempStr[30];
+	for (int i = 0; i < 30; i++) tempStr[i] = '\0';
+	for (int i = 0; i < strlen(reviseData); i++) tempStr[i] = reviseData[i];
+	fstream update;
+	update.open(binFileName, ios::binary | ios::out | ios::in);
+	update.seekp(adr, ios::beg);
+	if (type == 0) {
+		int intData = char_to_int(tempStr);
+		update.write((char*)& intData, sizeof(int));
+	}
+	else update.write((char*)& tempStr, sizeof(char) * 30);
+	update.close();
+}
+
+bool Operation::revise(int searchRow, char target[30], char reviseData[30], int reviseRow) {
+	long* result_adr = new long[1000];
+	int result_num = search_adr(searchRow, target, result_adr);//????
+	showRecord(result_adr, result_num);
+	if (result_num == 0) {
+		delete result_adr;
+		return false;
+	}
+	long miss = getFirstAdr(reviseRow) - infoSize;
+	for (int i = 0; i < result_num; i++) {
+		result_adr[i] += miss;
+		upDateRecord(result_adr[i], reviseData, bool_type[reviseRow - 1]);
+	}
+	//delete result_adr;
+	return true;
 }
 
 int char_to_int(char source[30]) {

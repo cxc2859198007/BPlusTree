@@ -8,11 +8,12 @@
 #include<queue>
 #include<cmath>
 #include <string>
+using namespace std;
 const int M = 8;//阶数
 class Node {
 public:
 	int key[M + 5];
-	long long bytes[M + 5];//bytes[i]为key[i]对应记录所在二进制文件中的位置
+	long bytes[M + 5];//bytes[i]为key[i]对应记录所在二进制文件中的位置
 	int num;
 	bool is_leaf;
 	Node* fath;
@@ -41,28 +42,28 @@ public:
 		参数解释：无
 		返回值：一个空结点
 	*/
-	
+
 	void Create();
 	/*
 		用途：创建一个空的B+树 只有一个空的根
 		参数解释：无
 		返回值：无
 	*/
-	
+
 	Node* Search_leaf(Node* now, int target);
 	/*
 		用途：找到应该插入/删除/查询的叶子结点
 		参数解释：now为当前结点 target为要插入/删除/查询的key
 		返回值：要操作的叶子结点
 	*/
-	
-	long long Search_bytes(int target);
+
+	long Search_bytes(int target);
 	/*
 		用途：查询某个key值对应的bytes值
 		参数解释：target为key值
 		返回值：返回key值对应的bytes值，如果不存在返回-1
 	*/
-	
+
 	void Split(Node* p1);
 	/*
 		用途：B+树的p1结点超过M-1个key，需要分裂
@@ -70,7 +71,7 @@ public:
 		返回值：无
 	*/
 
-	bool Insert(Node*& root, int target, long long byt);
+	bool Insert(Node*& root, int target, long byt);
 	/*
 		用途：B+树插入操作
 		参数解释：root为B+树的根 target为要插入的key byt为要插入的bytes

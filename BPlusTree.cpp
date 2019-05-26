@@ -85,7 +85,7 @@ Node* BPlusTree::Search_leaf(Node* now, int target) {
 		return Search_leaf(now->ch[now->num + 1], target);
 }
 
-long long BPlusTree::Search_bytes(int target) {
+long BPlusTree::Search_bytes(int target) {
 	Node* pos = Search_leaf(root, target);
 	int k = 0;
 	for (int i = 1; i <= pos->num; i++) {
@@ -165,7 +165,7 @@ void BPlusTree::Split(Node* p1) {
 	return;
 }
 
-bool BPlusTree::Insert(Node*& root, int target, long long byt) {
+bool BPlusTree::Insert(Node*& root, int target, long byt) {
 	Node* pos = Search_leaf(root, target);
 
 	int k = 0;
@@ -461,7 +461,7 @@ bool is_exist(BPlusTree& tmpbpt, char tableName[30]) {
 	}
 	else {
 		int tmpkey = 0;
-		long long tmpbytes = 0;
+		long tmpbytes = 0;
 		while (!in.eof()) {
 			in >> tmpkey >> tmpbytes;
 			tmpbpt.Insert(tmpbpt.root, tmpkey, tmpbytes);
