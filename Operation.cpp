@@ -61,7 +61,7 @@ void Operation::cinTableName(char tablename[30]) {
 		tableName[i] = tablename[i];
 }
 
-void Operation::buildNewTable(char tablename[30], int rownum, char rowname[20][30], char booltype[20], int primarykeynum) {
+void Operation::buildNewTable(char tablename[30], int rownum, char rowname[20][30], int booltype[20], int primarykeynum) {
 	cinTableName(tablename);
 	record_num = 0;
 	rowNum = rownum;
@@ -71,7 +71,8 @@ void Operation::buildNewTable(char tablename[30], int rownum, char rowname[20][3
 		}
 	}
 	for (int i = 0; i < rowNum; i++) {
-		bool_type[i] = booltype[i];
+		if (!booltype[i]) bool_type[i] = false;
+		else bool_type[i] = true;
 	}
 	primaryKeyNum = primarykeynum;
 	saveInfo();
@@ -222,7 +223,7 @@ int Operation::search_adr(int row, char target[30], long*& result_adr) {
 	int result_num = 0;
 	fstream f;
 	f.open(binFileName, ios::in | ios::binary);
-	if (bool_type[row - 1] == 0) {
+	if (!bool_type[row - 1]) {
 		int intTarget = char_to_int(target);
 		int tempInt; bool flag = false;
 		if (row == primaryKeyNum) {
@@ -267,11 +268,15 @@ int Operation::search_adr(int row, char target[30], long*& result_adr) {
 }
 
 bool Operation::search(int row, char target[30]) {
-	long* result_adr = new long[1000];
-	int result_num = search_adr(row, target, result_adr);//????
-	if (result_num == 0) return false;
+	long* result_adr = new long[50000];
+	int result_num = search_adr(row, target, result_adr);
+	if (result_num == 0) {
+		delete[]result_adr;
+		return false;
+	}
 	else {
 		showRecord(result_adr, result_num);
+		delete[]result_adr;
 		return true;
 	}
 }
@@ -280,18 +285,19 @@ void Operation::deleteInFile(long* adrs, int adr_num) {
 	fstream update;
 	update.open(binFileName, ios::binary | ios::out | ios::in);
 	for (int i = 0; i < adr_num; i++) {
-		update.seekp(adrs[i], ios::beg);//???ÀàÐÍ
+		update.seekp(adrs[i], ios::beg);
 		bool flag = false;
 		update.write((char*)& flag, sizeof(flag));
-		record_num--;
 	}
-	upDateInfo();
 	update.close();
 }
 bool Operation::deletee(int row, char target[30]) {
-	long* result_adr = new long[1000];
-	int result_num = search_adr(row, target, result_adr);//????
-	if (result_num == 0) return false;
+	long* result_adr = new long[50000];
+	int result_num = search_adr(row, target, result_adr);
+	if (result_num == 0) {
+		delete[]result_adr;
+		return false;
+	}
 	showRecord(result_adr, result_num);
 	deleteInFile(result_adr, result_num);
 
@@ -307,21 +313,19 @@ bool Operation::deletee(int row, char target[30]) {
 			char tempStr[30]; int tempInt;
 			bool flag = 0;
 			f.read((char*)& flag, sizeof(bool));
-			if (flag) {
-				for (int i = 0; i < rowNum; i++) {
-					if (!bool_type[i]) {
-						f.read((char*)& tempInt, sizeof(int));
-						if (i == primaryKeyNum) {
-							bpt.Delete(bpt.root, tempInt);
-							break;
-						}
+			for (int i = 0; i < rowNum; i++) {
+				if (!bool_type[i]) {
+					f.read((char*)& tempInt, sizeof(int));
+					if (i + 1 == primaryKeyNum) {
+						bpt.Delete(bpt.root, tempInt);
+						break;
 					}
-					else f.read((char*)& tempStr, sizeof(tempStr));
 				}
+				else f.read((char*)& tempStr, sizeof(tempStr));
 			}
 		}
 	}
-	//delete result_adr;
+	delete[]result_adr;
 	return true;
 }
 
@@ -332,7 +336,7 @@ void Operation::upDateRecord(long adr, char reviseData[30], bool type) {
 	fstream update;
 	update.open(binFileName, ios::binary | ios::out | ios::in);
 	update.seekp(adr, ios::beg);
-	if (type == 0) {
+	if (!type) {
 		int intData = char_to_int(tempStr);
 		update.write((char*)& intData, sizeof(int));
 	}
@@ -341,11 +345,11 @@ void Operation::upDateRecord(long adr, char reviseData[30], bool type) {
 }
 
 bool Operation::revise(int searchRow, char target[30], char reviseData[30], int reviseRow) {
-	long* result_adr = new long[1000];
-	int result_num = search_adr(searchRow, target, result_adr);//????
+	long* result_adr = new long[50000];
+	int result_num = search_adr(searchRow, target, result_adr);
 	showRecord(result_adr, result_num);
 	if (result_num == 0) {
-		delete result_adr;
+		delete[]result_adr;
 		return false;
 	}
 	long miss = getFirstAdr(reviseRow) - infoSize;
@@ -353,8 +357,13 @@ bool Operation::revise(int searchRow, char target[30], char reviseData[30], int 
 		result_adr[i] += miss;
 		upDateRecord(result_adr[i], reviseData, bool_type[reviseRow - 1]);
 	}
-	//delete result_adr;
+	delete[]result_adr;
 	return true;
+}
+
+void Operation::saveBPlusTree() {
+	bpt.Save(tableName);
+	bpt.Print(tableName);
 }
 
 int char_to_int(char source[30]) {

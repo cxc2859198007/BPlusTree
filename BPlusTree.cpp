@@ -3,13 +3,16 @@
 #include<istream>
 #include<ostream>
 using namespace std;
-ifstream in;
-ofstream out;
 
-/*
-void BPlusTree::Print() {
-	
-	out1.open(bpt, ios::out | ios::app);
+void BPlusTree::Print(char tableName[30]) {
+	char filePathName[50];
+	int tableNameLen = strlen(tableName);
+	strcpy_s(filePathName, "");
+	strncat_s(filePathName, tableName, tableNameLen);
+	strncat_s(filePathName, "_bplustree.txt", 14);
+
+	ofstream out;
+	out.open(filePathName, ios::out);
 
 	queue<Node*> Q; queue<int> L;
 	Q.push(root); L.push(1);
@@ -17,36 +20,44 @@ void BPlusTree::Print() {
 		Node* tmpQ = Q.front(); int tmpL = L.front();
 		Q.pop(); L.pop();
 		for (int i = 1; i <= tmpQ->num-1; i++)
-			out1 << tmpQ->key[i] << "--";
-		out1 << tmpQ->key[tmpQ->num] << "    ";
+			out << tmpQ->key[i] << "--";
+		out << tmpQ->key[tmpQ->num] << "    ";
 		if (tmpQ->is_leaf == true) continue;
 		for (int i = 1; i <= tmpQ->num + 1; i++) {
 			Q.push(tmpQ->ch[i]);
 			L.push(tmpL + 1);
 		}
-		if (!L.empty() && L.front() == tmpL + 1) out1 << endl;
+		if (!L.empty() && L.front() == tmpL + 1) out << endl;
 	}
-	out1 << endl << endl << endl;
+	out << endl << endl << endl;
 
-	out1.close();
+	out.close();
 	return;
 }
-*/
+
 void BPlusTree::Save(char tableName[30]) {
 	char filePathName[50];
 	int tableNameLen = strlen(tableName);
 	strcpy_s(filePathName, "");
 	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree.txt", 14);
-
+	strncat_s(filePathName, "_bplustree_data.txt", 19);
+	ofstream out;
 	out.open(filePathName, ios::out);
 	Node* pos = root;
 	while (pos->is_leaf == false) {
 		pos = pos->ch[1];
 	}
 	while (pos != NULL) {
-		for (int i = 1; i <= pos->num; i++) {
-			out << pos->key[i] << " " << pos->bytes[i] << endl;
+		if (pos->next != NULL) {
+			for (int i = 1; i <= pos->num; i++) {
+				out << pos->key[i] << " " << pos->bytes[i] << endl;
+			}
+		}
+		else {
+			for (int i = 1; i <= pos->num - 1; i++) {
+				out << pos->key[i] << " " << pos->bytes[i] << endl;
+			}
+			out << pos->key[pos->num] << " " << pos->bytes[pos->num];
 		}
 		pos = pos->next;
 	}
@@ -451,7 +462,9 @@ bool is_exist(BPlusTree& tmpbpt, char tableName[30]) {
 	int tableNameLen = strlen(tableName);
 	strcpy_s(filePathName, "");
 	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree.txt", 14);
+	strncat_s(filePathName, "_bplustree_data.txt", 19);
+	
+	ifstream in;
 	in.open(filePathName, ios::in);
 
 	tmpbpt.Create();

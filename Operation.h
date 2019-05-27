@@ -50,7 +50,7 @@ public:
 		返回值：无
 	*/
 
-	void buildNewTable(char tablename[30], int rownum, char rowname[20][30], char booltype[20], int primarykeynum);
+	void buildNewTable(char tablename[30], int rownum, char rowname[20][30], int booltype[20], int primarykeynum);
 	/*
 		用途：用户新建表时输入表的信息，同时建立B+树
 		参数解释：表名 属性数 属性名 属性类型(int or char[30]) 主码标号
@@ -133,12 +133,15 @@ public:
 		参数解释：type为数据类型
 		返回值：无
 	*/
+	
 	bool revise(int searchRow, char target[30], char reviseData[30], int reviseRow);
 	/*
 		用途：将第searchRow个属性为target的记录的第reviseRow个属性改为reviseData
 		参数解释：见用途
 		返回值：如果一条符合更改条件的记录都没有，返回false；否则，返回true
 	*/
+
+	void saveBPlusTree();
 };
 
 int char_to_int(char source[30]);

@@ -9,7 +9,7 @@
 #include<cmath>
 #include <string>
 using namespace std;
-const int M = 8;//½×Êý
+const int M = 20;//½×Êý
 class Node {
 public:
 	int key[M + 5];
@@ -27,7 +27,7 @@ public:
 	Node* root;
 	int Node_num;
 
-	//void Print();
+	void Print(char tableName[30]);
 
 	void Save(char tableName[30]);
 	/*
