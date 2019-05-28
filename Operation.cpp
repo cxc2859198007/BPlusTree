@@ -186,25 +186,38 @@ void Operation::upDateInfo() {
 void Operation::showRecord(long* adrs, int adr_num) {
 	fstream f;
 	f.open(binFileName, ios::in | ios::binary);
-	for (int k = 0; k < adr_num; k++) {
-		cout << "第" << k << "条:  ";
+
+	for (int k = 0; k < adr_num && k < 10000; k++) {
+		memset(show[k], '\0', sizeof(show[k]));
+		//cout << "第" << k + 1 << "条记录：";
 		f.seekg(adrs[k], ios::beg);
-		char tempStr[30]; int tempInt;
 		bool flag = 0;
 		f.read((char*)& flag, sizeof(bool));
 		if (flag) {
 			for (int i = 0; i < rowNum; i++) {
 				if (!bool_type[i]) {
+					int tempInt, cnt1 = 0, cnt2 = 0;
 					f.read((char*)& tempInt, sizeof(int));
-					cout << tempInt << " ";
+					while (tempInt) {
+						show[k][i][cnt1++] = tempInt % 10 + '0';
+						tempInt /= 10;
+					}
+					cnt2 = cnt1 - 1; cnt1 = 0;
+					while (cnt1 < cnt2) {
+						char c = show[k][i][cnt1];
+						show[k][i][cnt1] = show[k][i][cnt2];
+						show[k][i][cnt2] = c;
+						cnt1++; cnt2--;
+					}
+					//cout << show[k][i] << " ";
 				}
 				else {
-					f.read((char*)& tempStr, sizeof(tempStr));
-					cout << tempStr << " ";
+					f.read((char*)& show[k][i], sizeof(char) * 30);
+					//cout << show[k][i] << " ";
 				}
 			}
 		}
-		cout << endl;
+		//cout << endl;
 	}
 	f.close();
 }
@@ -268,7 +281,7 @@ int Operation::search_adr(int row, char target[30], long*& result_adr) {
 }
 
 bool Operation::search(int row, char target[30]) {
-	long* result_adr = new long[50000];
+	long* result_adr = new long[10000];
 	int result_num = search_adr(row, target, result_adr);
 	if (result_num == 0) {
 		delete[]result_adr;
@@ -292,7 +305,7 @@ void Operation::deleteInFile(long* adrs, int adr_num) {
 	update.close();
 }
 bool Operation::deletee(int row, char target[30]) {
-	long* result_adr = new long[50000];
+	long* result_adr = new long[10000];
 	int result_num = search_adr(row, target, result_adr);
 	if (result_num == 0) {
 		delete[]result_adr;
@@ -345,7 +358,7 @@ void Operation::upDateRecord(long adr, char reviseData[30], bool type) {
 }
 
 bool Operation::revise(int searchRow, char target[30], char reviseData[30], int reviseRow) {
-	long* result_adr = new long[50000];
+	long* result_adr = new long[10000];
 	int result_num = search_adr(searchRow, target, result_adr);
 	showRecord(result_adr, result_num);
 	if (result_num == 0) {

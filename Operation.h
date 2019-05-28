@@ -17,6 +17,8 @@ public:
 	int infoSize;
 	int recordSize;
 
+	char show[10000][20][30];
+
 	Operation() {
 		memset(tableName, 0, sizeof(tableName));
 		recordSize = 0;
