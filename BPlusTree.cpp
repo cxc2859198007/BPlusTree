@@ -2,14 +2,17 @@
 #include<fstream>
 #include<istream>
 #include<ostream>
+#include<cstring>
+#include<string>
+#include<string.h>
 using namespace std;
 
 void BPlusTree::Print(char tableName[30]) {
 	char filePathName[50];
 	int tableNameLen = strlen(tableName);
-	strcpy_s(filePathName, "");
-	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree.txt", 14);
+	memset(filePathName, '\0', sizeof(filePathName));
+	Strncat(filePathName, tableName, tableNameLen);
+	Strncat(filePathName, "_bplustree.txt", 14);
 
 	ofstream out;
 	out.open(filePathName, ios::out);
@@ -19,7 +22,7 @@ void BPlusTree::Print(char tableName[30]) {
 	while (!Q.empty()) {
 		Node* tmpQ = Q.front(); int tmpL = L.front();
 		Q.pop(); L.pop();
-		for (int i = 1; i <= tmpQ->num-1; i++)
+		for (int i = 1; i <= tmpQ->num - 1; i++)
 			out << tmpQ->key[i] << "--";
 		out << tmpQ->key[tmpQ->num] << "    ";
 		if (tmpQ->is_leaf == true) continue;
@@ -37,10 +40,11 @@ void BPlusTree::Print(char tableName[30]) {
 
 void BPlusTree::Save(char tableName[30]) {
 	char filePathName[50];
+	char tmp[30] = "_bplustree_data.txt";
 	int tableNameLen = strlen(tableName);
-	strcpy_s(filePathName, "");
-	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree_data.txt", 19);
+	memset(filePathName, '\0', sizeof(filePathName));
+	Strncat(filePathName, tableName, tableNameLen);
+	Strncat(filePathName, tmp, 19);
 	ofstream out;
 	out.open(filePathName, ios::out);
 	Node* pos = root;
@@ -72,7 +76,7 @@ Node* BPlusTree::Node_new() {
 	for (int i = 0; i < M + 5; i++) node->bytes[i] = 0;
 	for (int i = 0; i < M + 5; i++) node->ch[i] = NULL;
 	node->fath = NULL;
-	node->prev = NULL; node->next = NULL; 
+	node->prev = NULL; node->next = NULL;
 	node->num = 0;
 	return node;
 }
@@ -92,7 +96,7 @@ Node* BPlusTree::Search_leaf(Node* now, int target) {
 			break;
 		}
 	}
-	if (flag == false) 
+	if (flag == false)
 		return Search_leaf(now->ch[now->num + 1], target);
 }
 
@@ -109,22 +113,34 @@ long BPlusTree::Search_bytes(int target) {
 	return pos->bytes[k];
 }
 
+void BPlusTree::Search_rangebytes(int l, int r, int& result_num, long*& result_adr) {
+	Node* pos = Search_leaf(root, l);
+	while (pos != NULL) {
+		for (int i = 1; i <= pos->num; i++) {
+			if (l <= pos->key[i] && pos->key[i] <= r && result_num < 2000) {
+				result_adr[result_num++] = pos->bytes[i];
+			}
+		}
+		pos = pos->next;
+	}
+}
+
 void BPlusTree::Split(Node* p1) {
 	Node* fa = p1->fath;
-	
+
 	Node* p2 = Node_new();
 	p2->is_leaf = p1->is_leaf;
 	p2->fath = p1->fath;
-	
+
 	if (M % 2 == 0) {
 		p1->num = M / 2;
-		p2->num = M / 2 - 1; 
+		p2->num = M / 2 - 1;
 	}
 	else {
 		p1->num = M / 2;
 		p2->num = M / 2;
 	}
-	
+
 	for (int i = 1; i <= p2->num; i++) {
 		p2->key[i] = p1->key[p1->num + i + 1];
 		p2->bytes[i] = p1->bytes[p1->num + i + 1];
@@ -138,7 +154,7 @@ void BPlusTree::Split(Node* p1) {
 		p2->bytes[1] = p1->bytes[p1->num + 1];
 		p2->num++;
 	}
-	
+
 	if (p2->is_leaf == false) {
 		for (int i = 1; i <= p2->num + 1; i++) {
 			p2->ch[i] = p1->ch[p1->num + i + 1];
@@ -183,10 +199,11 @@ bool BPlusTree::Insert(Node*& root, int target, long byt) {
 	for (int i = 1; i <= pos->num; i++) {
 		if (target == pos->key[i]) {
 			k = i;
-			break;		}
+			break;
+		}
 	}
 	if (k != 0) return false;//记录已存在，不允许重复插入
-	
+
 	//插入
 	bool flag = false;
 	for (int i = 1; i <= pos->num; i++) {
@@ -206,7 +223,7 @@ bool BPlusTree::Insert(Node*& root, int target, long byt) {
 		pos->bytes[pos->num + 1] = byt;
 	}
 	pos->num++;
-	
+
 	//分裂
 	if (pos->num == M) {
 		if (pos == root) {//根结点
@@ -263,7 +280,7 @@ bool BPlusTree::Left_transfer(Node* p) {
 				p->bytes[i] = p->bytes[i - 1];
 			}
 			for (int i = p->num + 2; i >= 2; i--) p->ch[i] = p->ch[i - 1];
-				
+
 			for (int i = 1; i <= p->fath->num; i++) {
 				if (p->fath->ch[i] == leftsli && p->fath->ch[i + 1] == p) {
 					p->key[1] = p->fath->key[i];
@@ -326,7 +343,7 @@ bool BPlusTree::Right_transfer(Node* p) {
 
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -360,7 +377,7 @@ bool BPlusTree::Merge(Node* p1, Node* p2) {
 					p1->key[p1->num + 1] = p1->fath->key[i];
 					p1->bytes[p1->num + 1] = p1->fath->bytes[i];
 					p1->num += 1;
-					for (int j = p1->num + 1 , k = 1; k <= p2->num; j++, k++) {
+					for (int j = p1->num + 1, k = 1; k <= p2->num; j++, k++) {
 						p1->key[j] = p2->key[k];
 						p1->bytes[j] = p2->bytes[k];
 					}
@@ -392,16 +409,16 @@ bool BPlusTree::Merge(Node* p1, Node* p2) {
 
 bool BPlusTree::Delete(Node*& root, int target) {
 	Node* pos = Search_leaf(root, target);
-	
+
 	int k = 0;
 	for (int i = 1; i <= pos->num; i++) {
-		if (target == pos->key[i]) {			
+		if (target == pos->key[i]) {
 			k = i;
 			break;
 		}
 	}
 	if (k == 0) return false;//记录不存在
-	
+
 	//删除
 	for (int i = k; i <= pos->num - 1; i++) {
 		pos->key[i] = pos->key[i + 1];
@@ -460,10 +477,10 @@ bool BPlusTree::Delete(Node*& root, int target) {
 bool is_exist(BPlusTree& tmpbpt, char tableName[30]) {
 	char filePathName[50];
 	int tableNameLen = strlen(tableName);
-	strcpy_s(filePathName, "");
-	strncat_s(filePathName, tableName, tableNameLen);
-	strncat_s(filePathName, "_bplustree_data.txt", 19);
-	
+	memset(filePathName, '\0', sizeof(filePathName));
+	Strncat(filePathName, tableName, tableNameLen);
+	Strncat(filePathName, "_bplustree_data.txt", 19);
+
 	ifstream in;
 	in.open(filePathName, ios::in);
 
@@ -481,5 +498,18 @@ bool is_exist(BPlusTree& tmpbpt, char tableName[30]) {
 		}
 		in.close();
 		return true;
+	}
+}
+
+void Strncat(char* s1, char* s2, int len) {
+	int lens1 = strlen(s1), lens2 = strlen(s2);
+	for (int i = lens1, j = 0; j < lens2; i++, j++) {
+		s1[i] = s2[j];
+	}
+}
+void Strncat(char* s1, const char* s2, int len) {
+	int lens1 = strlen(s1), lens2 = strlen(s2);
+	for (int i = lens1, j = 0; j < lens2; i++, j++) {
+		s1[i] = s2[j];
 	}
 }

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BPLUSTREE_H
+#define BPLUSTREE_H
+
 #include<iostream>
 #include<cstdio>
 #include<cstring>
@@ -27,11 +29,17 @@ public:
 	Node* root;
 	int Node_num;
 
+
 	void Print(char tableName[30]);
+	/*
+		用途：将此B+树结构存储下来,存储到tableName_bplustree.txt
+		参数解释：tableName[30]为B+树对应的表名
+		返回值：无
+	*/
 
 	void Save(char tableName[30]);
 	/*
-		用途：将此B+树存储下来,存储到tableName_bplustree.txt
+		用途：将此B+树key和bytes存储下来,存储到tableName_bplustree_data.txt
 		参数解释：tableName[30]为B+树对应的表名
 		返回值：无
 	*/
@@ -64,6 +72,13 @@ public:
 		返回值：返回key值对应的bytes值，如果不存在返回-1
 	*/
 
+	void Search_rangebytes(int l, int r, int& result_num, long*& result_adr);
+	/*
+		用途：查询key值在[l,r]范围内的所有对应bytes值
+		参数解释：l,r表范围，共result_num个记录，放在results_adr数组中
+		返回值：无
+	*/
+	
 	void Split(Node* p1);
 	/*
 		用途：B+树的p1结点超过M-1个key，需要分裂
@@ -122,3 +137,7 @@ bool is_exist(BPlusTree& tmpbpt, char tableName[30]);
 	参数解释：tmpbpt为建立的B+树 tableName为此树对应的表名
 	返回值：返回以前是否建过tableName
 */
+
+void Strncat(char* s1, char* s2, int len);
+void Strncat(char* s1, const char* s2, int len);
+#endif

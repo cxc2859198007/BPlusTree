@@ -7,7 +7,6 @@
 using namespace std;
 Operation opt;
 ofstream dataout;
-
 /*
 ²âÊÔÊı¾İ£º
 Student
@@ -15,7 +14,6 @@ Student
 id name sex age class grade school chinese math english
 0 1 1 0 1 0 1 0 0 0
 1
-*/
 
 bool vis[100000000];
 int RandId() {
@@ -60,24 +58,24 @@ string RandSchool() {
 	return sch;
 }
 void Rand() {
-	int id= RandId(); dataout << id << " ";
+	int id = RandId(); dataout << id << " ";
 	//cout << id << " ";
-	
+
 	string nm = RandName(); dataout << nm << " ";
 	//cout << nm << " ";
-	
+
 	string sex = RandSex(); dataout << sex << " ";
 	//cout << sex << " ";
-	
+
 	int age = rand() % 9 + 12; dataout << age << " ";
 	//cout << age << " ";
 
 	string cla = RandClass(); dataout << cla << " ";
 	//cout << cla << " ";
-	
+
 	int gra = rand() % 21; dataout << gra << " ";
 	//cout << gra << " ";
-	
+
 	string sch = RandSchool(); dataout << sch << " ";
 	//cout << sch << " ";
 
@@ -95,25 +93,26 @@ void RandData() {
 	for (int i = 1; i <= 1000000; i++) Rand();
 	dataout.close();
 }
+*/
+
+
 
 int main() {
-	
 	char tbnm[30] = "Student";
 	int rm = 10;
 	char rnm[20][30] = { "id","name","sex","age","class","grade","school","chinese","math","english" };
 	int tp[20] = { 0, 1, 1, 0, 1, 0, 1, 0, 0, 0 };
 	int pkn = 1;
-	char df[30] = "test_data_1w.txt";
-	char tar1[30] = "female";
-	char tar2[30] = "male";
+	char df[30] = "test_data_0.1w.txt";
+	char tar1[30] = "lxe";
+	char tar2[30] = "1";
+	char a[20][30] = { "1","a","man","20","jk2","2","scut","100","100","100" };
+	char b[20][30] = { "2","b","woman","19","jk2","2","scut","100","100","100" };
 	//opt.buildNewTable(tbnm, rm, rnm, tp, pkn);
-	opt.chooseOldTable(tbnm);
-	//opt.deletee(3, tar2);
-	//opt.search(1, tar1);
-	opt.search(3, tar1);
 	//opt.insertByFile(df);
-	//opt.search(3, tar);
-	//opt.revise(3, tar2, tar1, 3);
+	opt.chooseOldTable(tbnm);
+	//opt.deletee(0, tar2, 3);
+	opt.search(0, tar2, 1);
 	opt.saveBPlusTree();
 	system("pause");
 	return 0;
