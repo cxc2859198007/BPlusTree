@@ -117,7 +117,7 @@ void BPlusTree::Search_rangebytes(int l, int r, int& result_num, long*& result_a
 	Node* pos = Search_leaf(root, l);
 	while (pos != NULL) {
 		for (int i = 1; i <= pos->num; i++) {
-			if (l <= pos->key[i] && pos->key[i] <= r && result_num < 2000) {
+            if (l <= pos->key[i] && pos->key[i] <= r && result_num < 10000000) {
 				result_adr[result_num++] = pos->bytes[i];
 			}
 		}

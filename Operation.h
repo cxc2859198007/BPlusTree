@@ -7,6 +7,8 @@
 #include<iostream>
 #include<cmath>
 using namespace std;
+const int maxResultNum = 10000000;
+const int showSize = 10000;
 class Operation {
 public:
 	char tableName[30];
@@ -20,7 +22,8 @@ public:
 	int recordSize;
 
 	int shownum;
-	char show[2000][20][30];
+    int result_nums;
+    char show[showSize][20][30];
 
 	Operation() {
 		memset(tableName, 0, sizeof(tableName));
@@ -119,7 +122,7 @@ public:
 		返回值：返回记录数量
 	*/
 
-	bool search(int row, char target[30],int rel);
+    bool search(int row, char target[30],int rel = 1);
 	/*
 		用途：查找第row个属性满足target条件的记录
 		参数解释：rel同search_adr的一样
@@ -162,6 +165,8 @@ public:
 	*/
 
 	void saveBPlusTree();
+
+    void int_to_char(int a,char b[]);
 };
 
 int char_to_int(char source[30]);
